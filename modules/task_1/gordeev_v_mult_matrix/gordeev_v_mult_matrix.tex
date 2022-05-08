@@ -1,0 +1,1247 @@
+\documentclass{report}
+
+\usepackage[warn]{mathtext}
+\usepackage[T2A]{fontenc}
+\usepackage[utf8]{luainputenc}
+\usepackage[english, russian]{babel}
+\usepackage[pdftex]{hyperref}
+\usepackage{tempora}
+\usepackage[12pt]{extsizes}
+\usepackage{listings}
+\usepackage{color}
+\usepackage{geometry}
+\usepackage{enumitem}
+\usepackage{multirow}
+\usepackage{graphicx}
+\usepackage{indentfirst}
+\usepackage{amsmath}
+
+\geometry{a4paper,top=2cm,bottom=2cm,left=2.5cm,right=1.5cm}
+\setlength{\parskip}{0.5cm}
+\setlist{nolistsep, itemsep=0.3cm,parsep=0pt}
+
+\usepackage{listings}
+\lstset{language=C++,
+        basicstyle=\footnotesize,
+		keywordstyle=\color{blue}\ttfamily,
+		stringstyle=\color{red}\ttfamily,
+		commentstyle=\color{green}\ttfamily,
+		morecomment=[l][\color{red}]{\#},
+		tabsize=4,
+		breaklines=true,
+  		breakatwhitespace=true,
+  		title=\lstname,
+}
+
+\makeatletter
+\renewcommand\@biblabel[1]{#1.\hfil}
+\makeatother
+
+\begin{document}
+
+\begin{titlepage}
+
+\begin{center}
+Министерство науки и высшего образования Российской Федерации
+\end{center}
+
+\begin{center}
+Федеральное государственное автономное образовательное учреждение высшего образования \\
+Национальный исследовательский Нижегородский государственный университет им. Н.И. Лобачевского
+\end{center}
+
+\begin{center}
+Институт информационных технологий, математики и механики
+\end{center}
+
+\vspace{4em}
+
+\begin{center}
+\textbf{\LargeОтчет по лабораторной работе} \\
+\end{center}
+\begin{center}
+\textbf{\Large«Умножение разреженных матриц. Элементы комплексного типа. Формат хранения матрицы – строковый (CRS).»} \\
+\end{center}
+
+\vspace{4em}
+
+\newbox{\lbox}
+\savebox{\lbox}{\hbox{text}}
+\newlength{\maxl}
+\setlength{\maxl}{\wd\lbox}
+\hfill\parbox{7cm}{
+\hspace*{5cm}\hspace*{-5cm}\textbf{Выполнил:} \\ студент группы 381908-1 \\ Гордеев В. В.\\
+\\
+\hspace*{5cm}\hspace*{-5cm}\textbf{Проверил:}\\ доцент кафедры МОСТ, \\ кандидат технических наук \\ Сысоев А. В.\\
+}
+\vspace{\fill}
+
+\begin{center} Нижний Новгород \\ 2022 \end{center}
+
+\end{titlepage}
+
+\setcounter{page}{2}
+
+% Содержание
+\tableofcontents
+\newpage
+
+% Введение
+\section*{Введение}
+\addcontentsline{toc}{section}{Введение}
+\par Понятие разреженной матрицы можно определить многими способами, суть которых состоит в том, что в разреженной матрице "много" нулевых элементов. Обычно говорят, что матрица разрежена, если она содержит O(n) отличных от нуля элементов. В противном случае матрица считается плотной. Типичным случаем разреженности является ограниченность числа ненулевых элементов в одной строке от 1 до k, где k<<n. Задачи линейной алгебры с разреженными матрицами возникают во многих областях, например, при решении дифференциальных уравнений в частных производных, при решении многомерных задач локальной оптимизации
+\newpage
+
+% Постановка задачи
+\section*{Постановка задачи}
+\addcontentsline{toc}{section}{Постановка задачи}
+\par В данном лабораторной работе требуется реализовать последовательную версию и параллельные версии алгоритма умножения разреженных матриц, провести вычислительные эксперименты для сравнения времени работы алгоритмов, используя при этом Google Test, продемонстрировать работу алгоритмов проверкой тестов в консоли, сделать выводы об эффективности реализованных алгоритмов, на основе технологий, позволяющих провести анализ времени работы алгоритмов.
+\par Параллельные алгоритмы должны быть реализованы при помощи технологий OpenMP, TBB, std::thread.
+\newpage
+
+% Описание алгоритма
+\section*{Описание алгоритма}
+\addcontentsline{toc}{section}{Описание алгоритма}
+\par Алгоритм умножения разреженных матриц:
+\begin{enumerate}
+\item Перемножение соответственных строк и столбцов двух матриц, при условии, что количество строк одной из матриц совпадает с количеством столбцов другой матрицы.
+\newpage
+
+% Описание схемы распараллеливания
+\section*{Описание схемы распараллеливания}
+\addcontentsline{toc}{section}{Описание схемы распараллеливания}
+\par Распараллеливание происходит с помощью перемножения каждой строки первой матрицы с каждым из столбцов второй матрицы в каждом из потоков. В OpenMP и TBB версиях распределение данных осуществляется автоматически. В std::thread версии количество данных, обрабатываемое каждым потоком, определяется по количеству строк/столбцов при перемножении. При выходе из параллельного региона во всех параллельных версиях используется автоматическая синхронизация.
+
+\newpage
+
+% Описание программной реализации
+\section*{Описание программной реализации}
+\addcontentsline{toc}{section}{Описание программной реализации}
+Программа состоит из заголовочного файла mult_matrix.h и двух файлов исходного кода mult_matrix и main.cpp.
+\par В заголовочном файле находятся прототипы функций алгоритмов последовательного и параллельного перемножения разреженных матриц.
+\par Функция для получения пустой матрицы заданного размера:
+\begin{lstlisting}
+std::vector<std::vector<std::complex<int>>> getEmptyMatrix(int _i, int _j);
+\end{lstlisting}
+Первый параметр функции является высотой матрицы, второй параметр - длиной матрицы.
+\par Функция для получения заполненной разреженной матрицы:
+\begin{lstlisting}
+std::vector<std::vector<std::complex<int>>> getRandomMatrix(int _i, int _j);
+\end{lstlisting}
+Первый параметр функции является высотой уже созданной матрицы, второй параметр - ее длиной.
+\par Функции для получения длины и ширины матрицы:
+\begin{lstlisting}
+int getLength() const;
+\end{lstlisting}
+\begin{lstlisting}
+int getHeight() const;
+\end{lstlisting}
+\par Функция для получения элемента матрицы:
+\begin{lstlisting}
+std::complex<int> getElement(int row, int col) const;
+\end{lstlisting}
+Первый параметр это номер строки в матрице, второй - номер столбца.
+\par Функция для последовательной версии алгоритма:
+\begin{lstlisting}
+MultMatrix multMatrixSequential(const MultMatrix& mtx);
+\end{lstlisting}
+Входящий параметр - ссылка на объект второй для перемножения матрицы.
+\par Функция для параллельного алгоритма (OpenMP версия):
+\begin{lstlisting}
+MultMatrix multMatrixParallel(const MultMatrix& mtx);
+\end{lstlisting}
+\par Функция для параллельного алгоритма (TBB версия):
+\begin{lstlisting}
+MultMatrix multMatrixParallel(const MultMatrix& mtx);
+\end{lstlisting}
+\par Функция для параллельного алгоритма (std::thread версия):
+\begin{lstlisting}
+MultMatrix multMatrixParallel(const MultMatrix& mtx);
+\end{lstlisting}
+Входные параметры параллельных функций совпадают с входными параметрами функции для последовательного алгоритма.
+\par В файле исходного кода mult_matrix.cpp содержится реализация функций, объявленных в заголовочном файле. В файле исходного кода main.cpp содержатся тесты для проверки корректности программы.
+\newpage
+
+% Подтверждение корректности
+\section*{Подтверждение корректности}
+\addcontentsline{toc}{section}{Подтверждение корректности}
+Для подтверждения корректности работы данной программы с помощью фрэймфорка Google Test мной было разработано 6 тестов для каждой версии алгоритма. В каждом из тестов осуществляется проверка части функционала разработанного мной класса для перемножения матриц, в том числе и проверка параллельной и последовательной версий, а так же подсчитывается время работы обоих алгоритмов, находится ускорение и затем результаты, полученные последовательным и параллельным способом сравниваются между собой.
+\par Всеми алгоритмами были достигнуты правильные результаты при перемножении матриц.
+\par Успешное прохождение всех тестов подтверждает корректность работы программы.
+\newpage
+
+% Результаты экспериментов
+\section*{Результаты экспериментов}
+\addcontentsline{toc}{section}{Результаты экспериментов}
+Вычислительные эксперименты для оценки эффективности работы параллельных алгоритмов проводились на ПК со следующими характеристиками:
+\begin{itemize}
+\item Процессор: AMD Ryzen 5 5600H, 3.30 ГГц, количество ядер: 6;
+\item Оперативная память: 16 ГБ (DDR4), 3200 МГц;
+\item Операционная система: Windows 10 Home.
+\end{itemize}
+
+\par Эксперименты проводились на 6 потоках. Размеры матриц 200*300 и 300*400.
+
+\par Результаты экспериментов.
+\begin{table}[!h]
+\caption{Результаты вычислительных экспериментов}
+\centering
+\begin{tabular}{| p{2cm} | p{3cm} | p{4cm} | p{2cm} |}
+\hline
+Версия алгоритма & Время работы (в секундах) & Ускорение  \\[5pt]
+\hline
+Sequential        & 1.57611        & -         \\
+OpenMP        & 0.369671        & 1.60312          \\
+TBB       & 0.262426        & 1.98169         \\
+std::thread        & 0.43303        & 1.54777           \\
+
+\hline
+\end{tabular}
+\end{table}
+
+\newpage
+
+% Выводы из результатов экспериментов
+\section*{Выводы из результатов экспериментов}
+\addcontentsline{toc}{section}{Выводы из результатов экспериментов}
+Можно заметить, что параллельные версии всегда быстрее последовательных примерно 6 раз, это говорит о том, что имеется связь между количеством физических ядер в компьютере и попыткой распараллеливания программы, в omp и tbb версиях используется не совсем чистое распараллеливание, что то остается под капотом, поэтому там различие немного больше, но в std::thread распараллеливание напрямую отражено в программе поэтому там отличие максимально зависит от количества используемых потоков, погрешность в остальных методах, это может быть механизм кэширования, алгоритмы планирования операционной системы и внутренняя реализация.
+\newpage
+
+% Заключение
+\section*{Заключение}
+\addcontentsline{toc}{section}{Заключение}
+Было проведено исследование теоретической части алгоритма умножения разреженных матриц, а так же реализованы последовательный и параллельные методы умножения разреженных матриц. Проведенные тесты показали корректность реализованной программы, а проведенные эксперименты доказали эффективность параллельных алгоритмов по сравнению с последовательным.
+\newpage
+
+% Литература
+\section*{Литература}
+\addcontentsline{toc}{section}{Литература}
+\begin{enumerate}
+\item ИНТУИТ - Электронный ресурс. URL: \newline \url{https://intuit.ru/studies/courses/4447/983/lecture/14931?page=5}
+\item Мееров И.Б., Сысоев А.В. «Разреженное матричное умножение». URL: \newline \url{http://www.hpcc.unn.ru/file.php?id=486}
+\end{enumerate}
+\newpage
+
+% Приложение
+\section*{Приложение}
+\addcontentsline{toc}{section}{Приложение}
+\textbf{Последовательная версия}
+\newline
+\newline mult_matrix.h
+\begin{lstlisting}
+// Copyright 2022 Gordeev Viktor
+#ifndef MODULES_TASK_1_GORDEEV_V_MULT_COMPLEX_MATRIX_MULT_COMPLEX_MATRIX_H_
+#define MODULES_TASK_1_GORDEEV_V_MULT_COMPLEX_MATRIX_MULT_COMPLEX_MATRIX_H_
+
+
+#include <vector>
+#include <string>
+#include <stdexcept>
+#include <complex>
+
+class MultMatrix {
+ private:
+    int i;
+    int j;
+    std::vector<int> rows;
+    std::vector<int> columns;
+    std::vector<std::complex<int>> mtxVector;
+
+    std::vector<std::vector<std::complex<int>>> getRandomMatrix(int _i, int _j);
+    std::vector<std::vector<std::complex<int>>> getEmptyMatrix(int _i, int _j);
+ public:
+    MultMatrix(int i, int j);
+    explicit MultMatrix(std::vector<std::vector<std::complex<int>>> mtx);
+    int getLength() const;
+    int getHeight() const;
+    std::complex<int> getElement(int row, int col) const;
+    MultMatrix multMatrix(const MultMatrix &matrix);
+};
+
+#endif  // MODULES_TASK_1_GORDEEV_V_MULT_COMPLEX_MATRIX_MULT_COMPLEX_MATRIX_H_
+
+\end{lstlisting}
+mult_matrix.cpp
+\begin{lstlisting}
+// Copyright 2022 Gordeev Viktor
+#include <vector>
+#include <random>
+
+#include "../../../modules/task_1/gordeev_v_mult_complex_matrix/mult_complex_matrix.h"
+
+std::vector<std::vector<std::complex<int>>>
+        MultMatrix::getRandomMatrix(int _i, int _j) {
+    std::random_device dev;
+    std::mt19937 gen(dev());
+    std::vector<std::vector<std::complex<int>>> result;
+    for (int k = 0; k < _i; k++) {
+        std::vector<std::complex<int>> tmp;
+        for (int l = 0; l < _j; l++) {
+            if (gen() % 1000 > 350) {
+                std::complex<int> complexNumber(0, 0);
+                tmp.push_back(complexNumber);
+            } else {
+                std::complex<int> complexNumber(gen() % 10, (gen() % 10));
+                tmp.push_back(complexNumber);
+            }
+        }
+        result.push_back(tmp);
+    }
+    return result;
+}
+
+std::vector<std::vector<std::complex<int>>>
+        MultMatrix::getEmptyMatrix(int _i, int _j) {
+    std::vector<std::vector<std::complex<int>>> mtx;
+    for (int k = 0; k < _i; k++) {
+        mtx.push_back(std::vector<std::complex<int>>(_j));
+    }
+    return mtx;
+}
+
+MultMatrix::MultMatrix(int _i, int _j) {
+    std::vector<std::vector<std::complex<int>>> mtx = getRandomMatrix(_i, _j);
+    i = mtx.size();
+    j = mtx[0].size();
+    std::complex<int> zero(0, 0);
+    rows.push_back(0);
+    int counter = 0;
+    for (int k = 0; k < static_cast<int>(mtx.size()); k++) {
+        for (int l = 0; l < static_cast<int>(mtx[0].size()); l++) {
+            if (mtx[k][l] != zero) {
+                mtxVector.push_back(mtx[k][l]);
+                columns.push_back(l);
+                counter++;
+            }
+        }
+        rows.push_back(counter);
+    }
+}
+
+MultMatrix::MultMatrix(std::vector<std::vector<std::complex<int>>> mtx) {
+    i = mtx.size();
+    j = mtx[0].size();
+    std::complex<int> zero(0, 0);
+    rows.push_back(0);
+    int counter = 0;
+    for (int k = 0; k < static_cast<int>(mtx.size()); k++) {
+        for (int l = 0; l < static_cast<int>(mtx[0].size()); l++) {
+            if (mtx[k][l] != zero) {
+                mtxVector.push_back(mtx[k][l]);
+                columns.push_back(l);
+                counter++;
+            }
+        }
+        rows.push_back(counter);
+    }
+}
+
+int MultMatrix::getLength() const {
+    return i;
+}
+
+int MultMatrix::getHeight() const {
+    return j;
+}
+
+std::complex<int> MultMatrix::getElement(int row, int column) const {
+    if (row > i || column > j || row < 0 || column < 0) {
+        throw -1;
+    }
+    int currentColumn;
+    for (int k = rows[row]; k < rows[row + 1]; k++) {
+        currentColumn = columns[k];
+        if (currentColumn == column) {
+            return mtxVector[k];
+        }
+    }
+    return std::complex<int>();
+}
+
+MultMatrix MultMatrix::multMatrix(const MultMatrix &mtx) {
+    if (j != mtx.i) {
+        throw -1;
+    }
+    std::complex<int> tmp;
+    std::vector<std::vector<std::complex<int>>> res = getEmptyMatrix(i, mtx.j);
+    for (int k = 0; k < i; k++) {
+        for (int l = 0; l < mtx.j; l++) {
+            tmp = std::complex<int>();
+            for (int m = 0; m < j; m++) {
+                tmp += getElement(k, m) *
+                        mtx.getElement(m, l);
+            }
+            res[k][l] = tmp;
+        }
+    }
+    return MultMatrix(res);
+}
+
+\end{lstlisting}
+main.cpp
+\begin{lstlisting}
+// Copyright 2022 Gordeev Viktor
+#include <gtest/gtest.h>
+#include <vector>
+#include <omp.h>
+#include "../../../modules/task_1/gordeev_v_mult_complex_matrix/mult_complex_matrix.h"
+
+TEST(Gordeev_Mult_Matrix, Constructor_With_No_Throw) {
+    EXPECT_NO_THROW(MultMatrix mtx(5, 5));
+}
+
+TEST(Gordeev_Mult_Matrix, Cant_Get_Wrong_Matrix_Element) {
+    MultMatrix mtx(1, 3);
+    EXPECT_ANY_THROW(mtx.getElement(4, 4));
+}
+
+TEST(Gordeev_Mult_Matrix, Can_Get_Matrix_Element) {
+    MultMatrix mtx(10, 10);
+    EXPECT_NO_THROW(mtx.getElement(4, 4));
+}
+
+TEST(Gordeev_Mult_Matrix, Can_Mult_Matrix_Works_Correct) {
+    MultMatrix mtx1(3, 5);
+    MultMatrix mtx2(5, 6);
+    EXPECT_NO_THROW(mtx1.multMatrix(mtx2));
+}
+
+TEST(Gordeev_Mult_Matrix, Cant_Mult_Wrong_Size_Matrix) {
+    MultMatrix mtx1(2, 9);
+    MultMatrix mtx2(4, 5);
+    EXPECT_ANY_THROW(mtx1.multMatrix(mtx2));
+}
+
+TEST(Gordeev_Mult_Matrix, Res_Mult_Correct_Size) {
+    MultMatrix mtx1(4, 10);
+    MultMatrix mtx2(10, 10);
+    MultMatrix res = mtx1.multMatrix(mtx2);
+    EXPECT_EQ(res.getLength(), mtx1.getLength());
+    EXPECT_EQ(res.getHeight(), mtx2.getHeight());
+}
+TEST(Gordeev_Mult_Matrix, Time_Test) {
+    MultMatrix mtx1(200, 300);
+    MultMatrix mtx2(300, 400);
+    volatile double start_seq = omp_get_wtime();
+    MultMatrix res1 = mtx1.multMatrix(mtx2);
+    volatile double end_seq = omp_get_wtime();
+
+    std::cout<<"seq: "<<start_seq-end_seq<<"\n";
+    ASSERT_NO_THROW();
+}
+
+int main(int argc, char **argv) {
+    ::testing::InitGoogleTest(&argc, argv);
+    return RUN_ALL_TESTS();
+}
+
+
+\end{lstlisting}
+
+\textbf{OpenMP версия}
+\newline
+\newline mul_matrix.h
+\begin{lstlisting}
+// Copyright 2022 Gordeev Viktor
+#ifndef MODULES_TASK_2_GORDEEV_V_MULT_COMPLEX_MATRIX_MULT_COMPLEX_MATRIX_H_
+#define MODULES_TASK_2_GORDEEV_V_MULT_COMPLEX_MATRIX_MULT_COMPLEX_MATRIX_H_
+
+#include <omp.h>
+#include <vector>
+#include <string>
+#include <random>
+#include <complex>
+class MultMatrix {
+ private:
+    int i;
+    int j;
+    std::vector<int> rows;
+    std::vector<int> columns;
+    std::vector<std::complex<int>> mtxVector;
+
+    std::vector<std::vector<std::complex<int>>> getRandomMatrix(int _i, int _j);
+    std::vector<std::vector<std::complex<int>>> getEmptyMatrix(int _i, int _j);
+ public:
+    MultMatrix(int i, int j);
+    explicit MultMatrix(std::vector<std::vector<std::complex<int>>> mtx);
+    int getLength() const;
+    int getHeight() const;
+    std::complex<int> getElement(int row, int col) const;
+    MultMatrix multMatrixSequential(const MultMatrix& mtx);
+    MultMatrix multMatrixParallel(const MultMatrix& mtx);
+    bool equal(const MultMatrix& mtx);
+};
+#endif  // MODULES_TASK_2_GORDEEV_V_MULT_COMPLEX_MATRIX_MULT_COMPLEX_MATRIX_H_
+
+\end{lstlisting}
+mult_matrix.cpp
+\begin{lstlisting}
+// Copyright 2022 Gordeev Viktor
+
+#include "../../../modules/task_2/gordeev_v_mult_complex_matrix/mult_complex_matrix.h"
+
+std::vector<std::vector<std::complex<int>>>
+MultMatrix::getRandomMatrix(int _i, int _j) {
+    std::random_device dev;
+    std::mt19937 gen(dev());
+    std::vector<std::vector<std::complex<int>>> result;
+    for (int k = 0; k < _i; k++) {
+        std::vector<std::complex<int>> tmp;
+        for (int l = 0; l < _j; l++) {
+            if (gen() % 1000 > 350) {
+                std::complex<int> complexNumber(0, 0);
+                tmp.push_back(complexNumber);
+            } else {
+                std::complex<int> complexNumber(gen() % 10, (gen() % 10));
+                tmp.push_back(complexNumber);
+            }
+        }
+        result.push_back(tmp);
+    }
+    return result;
+}
+
+std::vector<std::vector<std::complex<int>>>
+MultMatrix::getEmptyMatrix(int _i, int _j) {
+    std::vector<std::vector<std::complex<int>>> mtx;
+    for (int k = 0; k < _i; k++) {
+        mtx.push_back(std::vector<std::complex<int>>(_j));
+    }
+    return mtx;
+}
+
+MultMatrix::MultMatrix(int _i, int _j) {
+    std::vector<std::vector<std::complex<int>>> mtx = getRandomMatrix(_i, _j);
+    i = mtx.size();
+    j = mtx[0].size();
+    std::complex<int> zero(0, 0);
+    rows.push_back(0);
+    int counter = 0;
+    for (int k = 0; k < static_cast<int>(mtx.size()); k++) {
+        for (int l = 0; l < static_cast<int>(mtx[0].size()); l++) {
+            if (mtx[k][l] != zero) {
+                mtxVector.push_back(mtx[k][l]);
+                columns.push_back(l);
+                counter++;
+            }
+        }
+        rows.push_back(counter);
+    }
+}
+
+MultMatrix::MultMatrix(std::vector<std::vector<std::complex<int>>> mtx) {
+    i = mtx.size();
+    j = mtx[0].size();
+    std::complex<int> zero(0, 0);
+    rows.push_back(0);
+    int counter = 0;
+    for (int k = 0; k < static_cast<int>(mtx.size()); k++) {
+        for (int l = 0; l < static_cast<int>(mtx[0].size()); l++) {
+            if (mtx[k][l] != zero) {
+                mtxVector.push_back(mtx[k][l]);
+                columns.push_back(l);
+                counter++;
+            }
+        }
+        rows.push_back(counter);
+    }
+}
+
+int MultMatrix::getLength() const {
+    return i;
+}
+
+int MultMatrix::getHeight() const {
+    return j;
+}
+
+std::complex<int> MultMatrix::getElement(int row, int column) const {
+    if (row > i || column > j || row < 0 || column < 0) {
+        throw -1;
+    }
+    int currentColumn;
+    for (int k = rows[row]; k < rows[row + 1]; k++) {
+        currentColumn = columns[k];
+        if (currentColumn == column) {
+            return mtxVector[k];
+        }
+    }
+    return std::complex<int>();
+}
+
+MultMatrix MultMatrix::multMatrixSequential(const MultMatrix &mtx) {
+    if (j != mtx.i) {
+        throw -1;
+    }
+    std::complex<int> tmp;
+    std::vector<std::vector<std::complex<int>>> res = getEmptyMatrix(i, mtx.j);
+    for (int k = 0; k < i; k++) {
+        for (int l = 0; l < mtx.j; l++) {
+            tmp = std::complex<int>();
+            for (int m = 0; m < j; m++) {
+                tmp += getElement(k, m) *
+                       mtx.getElement(m, l);
+            }
+            res[k][l] = tmp;
+        }
+    }
+    return MultMatrix(res);
+}
+
+MultMatrix MultMatrix::multMatrixParallel(const MultMatrix &mtx) {
+    if (j != mtx.i) {
+        throw -1;
+    }
+    std::complex<int> tmp;
+    std::vector<std::vector<std::complex<int>>> res = getEmptyMatrix(i, mtx.j);
+#pragma omp parallel for shared(mtx, res) private(tmp)
+    for (int k = 0; k < i; k++) {
+        for (int l = 0; l < mtx.j; l++) {
+            tmp = std::complex<int>();
+            for (int m = 0; m < j; m++) {
+                tmp += getElement(k, m) *
+                       mtx.getElement(m, l);
+            }
+            res[k][l] = tmp;
+        }
+    }
+    return MultMatrix(res);
+}
+
+bool MultMatrix::equal(const MultMatrix &mtx) {
+    if (i != mtx.i)
+        return false;
+    if (j != mtx.j)
+        return false;
+    if (mtxVector != mtx.mtxVector)
+        return false;
+    return true;
+}
+
+\end{lstlisting}
+main.cpp
+\begin{lstlisting}
+// Copyright 2022 Gordeev Viktor
+
+#include <gtest/gtest.h>
+#include "../../../modules/task_2/gordeev_v_mult_complex_matrix/mult_complex_matrix.h"
+
+TEST(Gordeev_Mult_Matrix, Constructor_With_No_Throw) {
+    EXPECT_NO_THROW(MultMatrix mtx(5, 5));
+}
+
+TEST(Gordeev_Mult_Matrix, Cant_Get_Wrong_Matrix_Element) {
+    MultMatrix mtx(1, 3);
+    EXPECT_ANY_THROW(mtx.getElement(4, 4));
+}
+
+TEST(Gordeev_Mult_Matrix, Can_Get_Matrix_Element) {
+    MultMatrix mtx(10, 10);
+    EXPECT_NO_THROW(mtx.getElement(4, 4));
+}
+
+TEST(Gordeev_Mult_Matrix, Can_Mult_Matrix_Works_Correct) {
+    MultMatrix mtx1(3, 5);
+    MultMatrix mtx2(5, 6);
+    EXPECT_NO_THROW(mtx1.multMatrixSequential(mtx2));
+}
+
+TEST(Gordeev_Mult_Matrix, Cant_Mult_Wrong_Size_Matrix) {
+    MultMatrix mtx1(2, 9);
+    MultMatrix mtx2(4, 5);
+    EXPECT_ANY_THROW(mtx1.multMatrixSequential(mtx2));
+}
+
+TEST(Gordeev_Mult_Matrix, Res_Mult_Correct_Size) {
+    MultMatrix mtx1(4, 10);
+    MultMatrix mtx2(10, 10);
+    MultMatrix res = mtx1.multMatrixSequential(mtx2);
+    EXPECT_EQ(res.getLength(), mtx1.getLength());
+    EXPECT_EQ(res.getHeight(), mtx2.getHeight());
+}
+
+TEST(Gordeev_Omp_Mult_Matrix, Res_Parallel_Equal_To_Sequential) {
+    MultMatrix mtx1(2, 3);
+    MultMatrix mtx2(3, 4);
+    MultMatrix res1 = mtx1.multMatrixSequential(mtx2);
+    MultMatrix res2 = mtx1.multMatrixParallel(mtx2);
+    ASSERT_TRUE(res1.equal(res2));
+}
+
+TEST(GORDEEV_OMP_MULT_MATRIX, Effectivness_Test){
+    MultMatrix mtx1(200, 300);
+    MultMatrix mtx2(300, 400);
+
+    volatile double start_seq = omp_get_wtime();
+    MultMatrix res1 = mtx1.multMatrixSequential(mtx2);
+    volatile double end_seq = omp_get_wtime();
+
+    volatile double start_par = omp_get_wtime();
+    MultMatrix res2 = mtx1.multMatrixParallel(mtx2);
+    volatile double end_par = omp_get_wtime();
+
+    double seq_time = end_seq - start_seq;
+    double par_time = end_par - start_par;
+    std::cout<<"parallel: "<<start_par-end_par<<"\n";
+    std::cout<<"seq: "<<start_seq-end_seq<<"\n";
+
+    ASSERT_NO_THROW();
+}
+
+int main(int argc, char **argv) {
+    ::testing::InitGoogleTest(&argc, argv);
+    return RUN_ALL_TESTS();
+}
+
+
+\end{lstlisting}
+
+\textbf{TBB версия}
+\newline
+\newline mult_matrix.h
+\begin{lstlisting}
+// Copyright 2022 Gordeev Viktor
+#ifndef MODULES_TASK_3_GORDEEV_V_MULT_COMPLEX_MATRIX_MULT_COMPLEX_MATRIX_H_
+#define MODULES_TASK_3_GORDEEV_V_MULT_COMPLEX_MATRIX_MULT_COMPLEX_MATRIX_H_
+
+#include <tbb/tbb.h>
+#include <vector>
+#include <string>
+#include <random>
+#include <iostream>
+#include <complex>
+
+
+class MultMatrix {
+ private:
+    int i;
+    int j;
+    std::vector<int> rows;
+    std::vector<int> columns;
+    std::vector<std::complex<int>> mtxVector;
+
+    std::vector<std::vector<std::complex<int>>> getRandomMatrix(int _i, int _j);
+    std::vector<std::vector<std::complex<int>>> getEmptyMatrix(int _i, int _j);
+ public:
+    MultMatrix(int i, int j);
+    explicit MultMatrix(std::vector<std::vector<std::complex<int>>> mtx);
+    int getLength() const;
+    int getHeight() const;
+    std::complex<int> getElement(int row, int col) const;
+    MultMatrix multMatrixSequential(const MultMatrix& mtx);
+    MultMatrix multMatrixParallel(const MultMatrix& mtx);
+    bool equal(const MultMatrix& mtx);
+};
+
+#endif  // MODULES_TASK_3_GORDEEV_V_MULT_COMPLEX_MATRIX_MULT_COMPLEX_MATRIX_H_
+
+\end{lstlisting}
+mult_matrix.cpp
+\begin{lstlisting}
+// Copyright 2022 Gordeev Viktor
+
+#include "../../../modules/task_3/gordeev_v_mult_complex_matrix/mult_complex_matrix.h"
+
+std::vector<std::vector<std::complex<int>>>
+
+MultMatrix::getRandomMatrix(int _i, int _j) {
+    std::random_device dev;
+    std::mt19937 gen(dev());
+    std::vector<std::vector<std::complex<int>>> result;
+    for (int k = 0; k < _i; k++) {
+        std::vector<std::complex<int>> tmp;
+        for (int l = 0; l < _j; l++) {
+            if (gen() % 1000 > 350) {
+                std::complex<int> complexNumber(0, 0);
+                tmp.push_back(complexNumber);
+            } else {
+                std::complex<int> complexNumber(gen() % 10, (gen() % 10));
+                tmp.push_back(complexNumber);
+            }
+        }
+        result.push_back(tmp);
+    }
+    return result;
+}
+
+std::vector<std::vector<std::complex<int>>>
+
+MultMatrix::getEmptyMatrix(int _i, int _j) {
+    std::vector<std::vector<std::complex<int>>> mtx;
+    for (int k = 0; k < _i; k++) {
+        mtx.push_back(std::vector<std::complex<int >>(_j));
+    }
+    return mtx;
+}
+
+MultMatrix::MultMatrix(int _i, int _j) {
+    std::vector<std::vector<std::complex<int>>> mtx = getRandomMatrix(_i, _j);
+    i = mtx.size();
+    j = mtx[0].size();
+    std::complex<int> zero(0, 0);
+    rows.push_back(0);
+    int counter = 0;
+    for (int k = 0; k < static_cast<int>(mtx.size()); k++) {
+        for (int l = 0; l < static_cast<int>(mtx[0].size()); l++) {
+            if (mtx[k][l] != zero) {
+                mtxVector.push_back(mtx[k][l]);
+                columns.push_back(l);
+                counter++;
+            }
+        }
+        rows.push_back(counter);
+    }
+}
+
+MultMatrix::MultMatrix(std::vector<std::vector<std::complex<int>>> mtx) {
+    i = mtx.size();
+    j = mtx[0].size();
+    std::complex<int> zero(0, 0);
+    rows.push_back(0);
+    int counter = 0;
+    for (int k = 0; k < static_cast<int>(mtx.size()); k++) {
+        for (int l = 0; l < static_cast<int>(mtx[0].size()); l++) {
+            if (mtx[k][l] != zero) {
+                mtxVector.push_back(mtx[k][l]);
+                columns.push_back(l);
+                counter++;
+            }
+        }
+        rows.push_back(counter);
+    }
+}
+
+int MultMatrix::getLength() const {
+    return i;
+}
+
+int MultMatrix::getHeight() const {
+    return j;
+}
+
+std::complex<int> MultMatrix::getElement(int row, int column) const {
+    if (row > i || column > j || row < 0 || column < 0) {
+        throw -1;
+    }
+    int currentColumn;
+    for (int k = rows[row]; k < rows[row + 1]; k++) {
+        currentColumn = columns[k];
+        if (currentColumn == column) {
+            return mtxVector[k];
+        }
+    }
+    return std::complex<int>();
+}
+
+MultMatrix MultMatrix::multMatrixSequential(const MultMatrix &mtx) {
+    if (j != mtx.i) {
+        throw -1;
+    }
+    std::complex<int> tmp;
+    std::vector<std::vector<std::complex<int>>> res = getEmptyMatrix(i, mtx.j);
+    for (int k = 0; k < i; k++) {
+        for (int l = 0; l < mtx.j; l++) {
+            tmp = std::complex<int>();
+            for (int m = 0; m < j; m++) {
+                tmp += getElement(k, m) *
+                       mtx.getElement(m, l);
+            }
+            res[k][l] = tmp;
+        }
+    }
+    return MultMatrix(res);
+}
+
+MultMatrix MultMatrix::multMatrixParallel(const MultMatrix &mtx) {
+    if (j != mtx.i) {
+        throw -1;
+    }
+    std::vector<std::vector<std::complex<int>>> res = getEmptyMatrix(i, mtx.j);
+    tbb::parallel_for(tbb::blocked_range<int>(0, i),
+                      [this, &mtx, &res](tbb::blocked_range<int> &z) {
+                          std::complex<int> tmp;
+                          for (int k = z.begin(); k != z.end(); k++) {
+                              for (int l = 0; l < mtx.j; l++) {
+                                  tmp = std::complex<int>();
+                                  for (int m = 0; m < j; m++) {
+                                      tmp += getElement(k, m)
+                                             * mtx.getElement(m, l);
+                                  }
+                                  res[k][l] = tmp;
+                              }
+                          }
+                      });
+    return MultMatrix(res);
+}
+
+bool MultMatrix::equal(const MultMatrix &mtx) {
+    if (i != mtx.i)
+        return false;
+    if (j != mtx.j)
+        return false;
+    if (mtxVector != mtx.mtxVector)
+        return false;
+    return true;
+}
+
+\end{lstlisting}
+main.cpp
+\begin{lstlisting}
+// Copyright 2022 Gordeev Viktor
+
+#include <gtest/gtest.h>
+
+#include "../../../modules/task_3/gordeev_v_mult_complex_matrix/mult_complex_matrix.h"
+
+TEST(Gordeev_Mult_Matrix, Constructor_With_No_Throw) {
+    EXPECT_NO_THROW(MultMatrix mtx(5, 5));
+}
+
+TEST(Gordeev_Mult_Matrix, Cant_Get_Wrong_Matrix_Element) {
+    MultMatrix mtx(1, 3);
+    EXPECT_ANY_THROW(mtx.getElement(4, 4));
+}
+
+TEST(Gordeev_Mult_Matrix, Can_Get_Matrix_Element) {
+    MultMatrix mtx(10, 10);
+    EXPECT_NO_THROW(mtx.getElement(4, 4));
+}
+
+TEST(Gordeev_Mult_Matrix, Can_Mult_Matrix_Works_Correct) {
+    MultMatrix mtx1(3, 5);
+    MultMatrix mtx2(5, 6);
+    EXPECT_NO_THROW(mtx1.multMatrixSequential(mtx2));
+}
+
+TEST(Gordeev_Mult_Matrix, Cant_Mult_Wrong_Size_Matrix) {
+    MultMatrix mtx1(2, 9);
+    MultMatrix mtx2(4, 5);
+    EXPECT_ANY_THROW(mtx1.multMatrixSequential(mtx2));
+}
+
+TEST(Gordeev_Mult_Matrix, Res_Mult_Correct_Size) {
+    MultMatrix mtx1(4, 10);
+    MultMatrix mtx2(10, 10);
+    MultMatrix res = mtx1.multMatrixSequential(mtx2);
+    EXPECT_EQ(res.getLength(), mtx1.getLength());
+    EXPECT_EQ(res.getHeight(), mtx2.getHeight());
+}
+
+TEST(Gordeev_Tbb_Mult_Matrix, Res_Parallel_Equal_To_Sequential) {
+    MultMatrix mtx1(2, 3);
+    MultMatrix mtx2(3, 4);
+    MultMatrix res1 = mtx1.multMatrixSequential(mtx2);
+    MultMatrix res2 = mtx1.multMatrixParallel(mtx2);
+    ASSERT_TRUE(res1.equal(res2));
+}
+
+ TEST(Gordeev_Tbb_Mult_Matrix, Test_Time) {
+    MultMatrix mtx1(200, 300);
+    MultMatrix mtx2(300, 400);
+
+    tbb::tick_count startSequential = tbb::tick_count::now();
+    MultMatrix res1 = mtx1.multMatrixSequential(mtx2);
+    tbb::tick_count endSequential = tbb::tick_count::now();
+
+    tbb::tick_count startParallel = tbb::tick_count::now();
+    MultMatrix res2 = mtx1.multMatrixParallel(mtx2);
+    tbb::tick_count endParallel = tbb::tick_count::now();
+
+    double seq_time = (endSequential - startSequential).seconds();
+    double par_time = (endParallel - startParallel).seconds();
+    std::cout<<"parallel: "<<par_time<<"\n";
+    std::cout<<"seq: "<<seq_time<<"\n";
+    std::cout << "Effectiveness: " << seq_time / par_time << '\n';
+    ASSERT_NO_THROW();
+ }
+
+
+int main(int argc, char **argv) {
+    ::testing::InitGoogleTest(&argc, argv);
+    return RUN_ALL_TESTS();
+}
+
+\end{lstlisting}
+
+\textbf{std::thread версия}
+\newline
+\newline mult_matrix.h
+\begin{lstlisting}
+// Copyright 2022 Gordeev Viktor
+
+#ifndef MODULES_TASK_4_GORDEEV_V_MULT_COMPLEX_MATRIX_MULT_COMPLEX_MATRIX_H_
+#define MODULES_TASK_4_GORDEEV_V_MULT_COMPLEX_MATRIX_MULT_COMPLEX_MATRIX_H_
+
+#include <complex>
+#include <vector>
+#include <string>
+#include <random>
+#include <iostream>
+#include <thread> // NOLINT [build/c++11]
+
+class MultMatrix {
+ private:
+    int i;
+    int j;
+    std::vector<int> rows;
+    std::vector<int> columns;
+    std::vector<std::complex<int>> mtxVector;
+
+    std::vector<std::vector<std::complex<int>>> getRandomMatrix(int _i, int _j);
+    std::vector<std::vector<std::complex<int>>> getEmptyMatrix(int _i, int _j);
+ public:
+    MultMatrix(int i, int j);
+    explicit MultMatrix(std::vector<std::vector<std::complex<int>>> mtx);
+    int getLength() const;
+    int getHeight() const;
+    std::complex<int> getElement(int row, int col) const;
+    MultMatrix multMatrixSequential(const MultMatrix& mtx);
+    MultMatrix multMatrixParallel(const MultMatrix& mtx);
+    bool equal(const MultMatrix& mtx);
+};
+
+#endif  // MODULES_TASK_4_GORDEEV_V_MULT_COMPLEX_MATRIX_MULT_COMPLEX_MATRIX_H_
+
+\end{lstlisting}
+mult_matrix.cpp
+\begin{lstlisting}
+// Copyright 2022 Gordeev Viktor
+
+#include "../../../modules/task_4/gordeev_v_mult_complex_matrix/mult_complex_matrix.h"
+
+std::vector<std::vector<std::complex<int>>>
+
+MultMatrix::getRandomMatrix(int _i, int _j) {
+    std::random_device dev;
+    std::mt19937 gen(dev());
+    std::vector<std::vector<std::complex<int>>> result;
+    for (int k = 0; k < _i; k++) {
+        std::vector<std::complex<int>> tmp;
+        for (int l = 0; l < _j; l++) {
+            if (gen() % 1000 > 350) {
+                std::complex<int> complexNumber(0, 0);
+                tmp.push_back(complexNumber);
+            } else {
+                std::complex<int> complexNumber(gen() % 10, (gen() % 10));
+                tmp.push_back(complexNumber);
+            }
+        }
+        result.push_back(tmp);
+    }
+    return result;
+}
+
+std::vector<std::vector<std::complex<int>>>
+
+MultMatrix::getEmptyMatrix(int _i, int _j) {
+    std::vector<std::vector<std::complex<int>>> mtx;
+    for (int k = 0; k < _i; k++) {
+        mtx.push_back(std::vector<std::complex<int >>(_j));
+    }
+    return mtx;
+}
+
+MultMatrix::MultMatrix(int _i, int _j) {
+    std::vector<std::vector<std::complex<int>>> mtx = getRandomMatrix(_i, _j);
+    i = mtx.size();
+    j = mtx[0].size();
+    std::complex<int> zero(0, 0);
+    rows.push_back(0);
+    int counter = 0;
+    for (int k = 0; k < static_cast<int>(mtx.size()); k++) {
+        for (int l = 0; l < static_cast<int>(mtx[0].size()); l++) {
+            if (mtx[k][l] != zero) {
+                mtxVector.push_back(mtx[k][l]);
+                columns.push_back(l);
+                counter++;
+            }
+        }
+        rows.push_back(counter);
+    }
+}
+
+MultMatrix::MultMatrix(std::vector<std::vector<std::complex<int>>> mtx) {
+    i = mtx.size();
+    j = mtx[0].size();
+    std::complex<int> zero(0, 0);
+    rows.push_back(0);
+    int counter = 0;
+    for (int k = 0; k < static_cast<int>(mtx.size()); k++) {
+        for (int l = 0; l < static_cast<int>(mtx[0].size()); l++) {
+            if (mtx[k][l] != zero) {
+                mtxVector.push_back(mtx[k][l]);
+                columns.push_back(l);
+                counter++;
+            }
+        }
+        rows.push_back(counter);
+    }
+}
+
+int MultMatrix::getLength() const {
+    return i;
+}
+
+int MultMatrix::getHeight() const {
+    return j;
+}
+
+std::complex<int> MultMatrix::getElement(int row, int column) const {
+    if (row > i || column > j || row < 0 || column < 0) {
+        throw -1;
+    }
+    int currentColumn;
+    for (int k = rows[row]; k < rows[row + 1]; k++) {
+        currentColumn = columns[k];
+        if (currentColumn == column) {
+            return mtxVector[k];
+        }
+    }
+    return std::complex<int>();
+}
+
+MultMatrix MultMatrix::multMatrixSequential(const MultMatrix &mtx) {
+    if (j != mtx.i) {
+        throw -1;
+    }
+    std::complex<int> tmp;
+    std::vector<std::vector<std::complex<int>>> res = getEmptyMatrix(i, mtx.j);
+    for (int k = 0; k < i; k++) {
+        for (int l = 0; l < mtx.j; l++) {
+            tmp = std::complex<int>();
+            for (int m = 0; m < j; m++) {
+                tmp += getElement(k, m) *
+                       mtx.getElement(m, l);
+            }
+            res[k][l] = tmp;
+        }
+    }
+    return MultMatrix(res);
+}
+
+MultMatrix MultMatrix::multMatrixParallel(const MultMatrix &mtx) {
+    if (j != mtx.i) {
+        throw -1;
+    }
+    std::vector<std::thread> threads;
+    std::vector<std::vector<std::complex<int>>> res = getEmptyMatrix(i, mtx.j);
+    int threadNumber = std::thread::hardware_concurrency();
+    int remains = i % threadNumber;
+    int countAll = i / threadNumber;
+    for (int k = 0, currentThread = 0; k < i; k+=countAll, currentThread++) {
+        int from = k;
+        int to = k + countAll;
+        if (currentThread == threadNumber - 1 && remains != 0) {
+            to += remains;
+            k = i;
+        }
+        threads.push_back(std::thread(
+                [from, to, this, &mtx, &res]() {
+                    std::complex<int> tmp;
+                    for (int k = from; k < to; k++) {
+                        for (int l = 0; l < mtx.j; l++) {
+                            tmp = std::complex<int>();
+                            for (int m = 0; m < j; m++) {
+                                tmp += getElement(k, m)
+                                        * mtx.getElement(m, l);
+                            }
+                            res[k][l] = tmp;
+                        }
+                    }
+                }));
+    }
+    for (int k = 0; k < static_cast<int>(threads.size()); k++) {
+        threads[k].join();
+    }
+    return MultMatrix(res);
+}
+
+bool MultMatrix::equal(const MultMatrix &mtx) {
+    if (i != mtx.i)
+        return false;
+    if (j != mtx.j)
+        return false;
+    if (mtxVector != mtx.mtxVector)
+        return false;
+    return true;
+}
+
+\end{lstlisting}
+main.cpp
+\begin{lstlisting}
+// Copyright 2022 Gordeev Viktor
+
+#include <gtest/gtest.h>
+#include "../../../modules/task_4/gordeev_v_mult_complex_matrix/mult_complex_matrix.h"
+#include <omp.h>
+
+TEST(Gordeev_Mult_Matrix, Constructor_With_No_Throw) {
+    EXPECT_NO_THROW(MultMatrix mtx(5, 5));
+}
+
+TEST(Gordeev_Mult_Matrix, Cant_Get_Wrong_Matrix_Element) {
+    MultMatrix mtx(1, 3);
+    EXPECT_ANY_THROW(mtx.getElement(4, 4));
+}
+
+TEST(Gordeev_Mult_Matrix, Can_Get_Matrix_Element) {
+    MultMatrix mtx(10, 10);
+    EXPECT_NO_THROW(mtx.getElement(4, 4));
+}
+
+TEST(Gordeev_Mult_Matrix, Can_Mult_Matrix_Works_Correct) {
+    MultMatrix mtx1(3, 5);
+    MultMatrix mtx2(5, 6);
+    EXPECT_NO_THROW(mtx1.multMatrixSequential(mtx2));
+}
+
+TEST(Gordeev_Mult_Matrix, Cant_Mult_Wrong_Size_Matrix) {
+    MultMatrix mtx1(2, 9);
+    MultMatrix mtx2(4, 5);
+    EXPECT_ANY_THROW(mtx1.multMatrixSequential(mtx2));
+}
+
+TEST(Gordeev_Mult_Matrix, Res_Mult_Correct_Size) {
+    MultMatrix mtx1(4, 10);
+    MultMatrix mtx2(10, 10);
+    MultMatrix res = mtx1.multMatrixSequential(mtx2);
+    EXPECT_EQ(res.getLength(), mtx1.getLength());
+    EXPECT_EQ(res.getHeight(), mtx2.getHeight());
+}
+
+TEST(Gordeev_Thread_Mult_Matrix, Res_Parallel_Equal_To_Sequential) {
+    MultMatrix mtx1(4, 6);
+    MultMatrix mtx2(6, 8);
+    MultMatrix res1 = mtx1.multMatrixSequential(mtx2);
+    MultMatrix res2 = mtx1.multMatrixParallel(mtx2);
+    ASSERT_TRUE(res1.equal(res2));
+}
+
+ TEST(Gordeev_Thread_Mult_Matrix, Time_Test){
+    MultMatrix mtx1(200, 300);
+    MultMatrix mtx2(300, 400);
+
+    volatile double start_seq = omp_get_wtime();
+    MultMatrix res1 =mtx1.multMatrixSequential(mtx2);
+    volatile double end_seq = omp_get_wtime();
+
+    volatile double start_par = omp_get_wtime();
+    MultMatrix res2 = mtx1.multMatrixParallel(mtx2);
+    volatile double end_par = omp_get_wtime();
+    double seq_time = end_seq - start_seq;
+    double par_time = end_par - start_par;
+    std::cout<<"parallel: " <<  par_time << "\n";
+    std::cout<<"seq: " << seq_time <<"\n";
+    std::cout << "Effectiveness: " <<
+    seq_time/ par_time << '\n';
+    ASSERT_NO_THROW();
+ }
+
+int main(int argc, char **argv) {
+    ::testing::InitGoogleTest(&argc, argv);
+    return RUN_ALL_TESTS();
+}
+
+\end{lstlisting}
+
+\end{document}
