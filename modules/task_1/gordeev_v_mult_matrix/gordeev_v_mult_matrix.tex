@@ -473,8 +473,7 @@ mult_matrix.cpp
 
 #include "../../../modules/task_2/gordeev_v_mult_complex_matrix/mult_complex_matrix.h"
 
-std::vector<std::vector<std::complex<int>>>
-MultMatrix::getRandomMatrix(int _i, int _j) {
+std::vector<std::vector<std::complex<int>>>MultMatrix::getRandomMatrix(int _i, int _j) {
     std::random_device dev;
     std::mt19937 gen(dev());
     std::vector<std::vector<std::complex<int>>> result;
@@ -494,8 +493,7 @@ MultMatrix::getRandomMatrix(int _i, int _j) {
     return result;
 }
 
-std::vector<std::vector<std::complex<int>>>
-MultMatrix::getEmptyMatrix(int _i, int _j) {
+std::vector<std::vector<std::complex<int>>>MultMatrix::getEmptyMatrix(int _i, int _j) {
     std::vector<std::vector<std::complex<int>>> mtx;
     for (int k = 0; k < _i; k++) {
         mtx.push_back(std::vector<std::complex<int>>(_j));
@@ -735,9 +733,7 @@ mult_matrix.cpp
 
 #include "../../../modules/task_3/gordeev_v_mult_complex_matrix/mult_complex_matrix.h"
 
-std::vector<std::vector<std::complex<int>>>
-
-MultMatrix::getRandomMatrix(int _i, int _j) {
+std::vector<std::vector<std::complex<int>>>MultMatrix::getRandomMatrix(int _i, int _j) {
     std::random_device dev;
     std::mt19937 gen(dev());
     std::vector<std::vector<std::complex<int>>> result;
@@ -757,9 +753,7 @@ MultMatrix::getRandomMatrix(int _i, int _j) {
     return result;
 }
 
-std::vector<std::vector<std::complex<int>>>
-
-MultMatrix::getEmptyMatrix(int _i, int _j) {
+std::vector<std::vector<std::complex<int>>>MultMatrix::getEmptyMatrix(int _i, int _j) {
     std::vector<std::vector<std::complex<int>>> mtx;
     for (int k = 0; k < _i; k++) {
         mtx.push_back(std::vector<std::complex<int >>(_j));
@@ -1002,9 +996,7 @@ mult_matrix.cpp
 
 #include "../../../modules/task_4/gordeev_v_mult_complex_matrix/mult_complex_matrix.h"
 
-std::vector<std::vector<std::complex<int>>>
-
-MultMatrix::getRandomMatrix(int _i, int _j) {
+std::vector<std::vector<std::complex<int>>>MultMatrix::getRandomMatrix(int _i, int _j) {
     std::random_device dev;
     std::mt19937 gen(dev());
     std::vector<std::vector<std::complex<int>>> result;
@@ -1024,9 +1016,7 @@ MultMatrix::getRandomMatrix(int _i, int _j) {
     return result;
 }
 
-std::vector<std::vector<std::complex<int>>>
-
-MultMatrix::getEmptyMatrix(int _i, int _j) {
+std::vector<std::vector<std::complex<int>>>MultMatrix::getEmptyMatrix(int _i, int _j) {
     std::vector<std::vector<std::complex<int>>> mtx;
     for (int k = 0; k < _i; k++) {
         mtx.push_back(std::vector<std::complex<int >>(_j));
