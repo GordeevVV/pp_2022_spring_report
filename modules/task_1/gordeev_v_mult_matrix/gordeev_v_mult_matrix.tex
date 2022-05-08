@@ -5,7 +5,6 @@
 \usepackage[utf8]{luainputenc}
 \usepackage[english, russian]{babel}
 \usepackage[pdftex]{hyperref}
-\usepackage{tempora}
 \usepackage[12pt]{extsizes}
 \usepackage{listings}
 \usepackage{color}
@@ -33,10 +32,6 @@
   		title=\lstname,
 }
 
-\makeatletter
-\renewcommand\@biblabel[1]{#1.\hfil}
-\makeatother
-
 \begin{document}
 
 \begin{titlepage}
@@ -47,7 +42,7 @@
 
 \begin{center}
 Федеральное государственное автономное образовательное учреждение высшего образования \\
-Национальный исследовательский Нижегородский государственный университет им. Н.И. Лобачевского
+Национальный исследовательский Нижегородский государственный университет им. Н. И. Лобачевского
 \end{center}
 
 \begin{center}
@@ -57,10 +52,10 @@
 \vspace{4em}
 
 \begin{center}
-\textbf{\LargeОтчет по лабораторной работе} \\
+\textbf{\Large Отчет по лабораторной работе} \\
 \end{center}
 \begin{center}
-\textbf{\Large«Умножение разреженных матриц. Элементы комплексного типа. Формат хранения матрицы – строковый (CRS).»} \\
+\textbf{\Large «Умножение разреженных матриц. Элементы комплексного типа. Формат хранения матрицы – строковый (CRS).»} \\
 \end{center}
 
 \vspace{4em}
@@ -89,7 +84,7 @@
 % Введение
 \section*{Введение}
 \addcontentsline{toc}{section}{Введение}
-\par Понятие разреженной матрицы можно определить многими способами, суть которых состоит в том, что в разреженной матрице "много" нулевых элементов. Обычно говорят, что матрица разрежена, если она содержит O(n) отличных от нуля элементов. В противном случае матрица считается плотной. Типичным случаем разреженности является ограниченность числа ненулевых элементов в одной строке от 1 до k, где k<<n. Задачи линейной алгебры с разреженными матрицами возникают во многих областях, например, при решении дифференциальных уравнений в частных производных, при решении многомерных задач локальной оптимизации
+\par Понятие разреженной матрицы можно определить многими способами, суть которых состоит в том, что в разреженной матрице больше нулевых элементов. Обычно говорят, что матрица разрежена, если она содержит  O(n) отличных от нуля элементов. В противном случае матрица считается плотной. Типичным случаем разреженности является ограниченность числа ненулевых элементов в одной строке от 1 до к, где к меньше н. Задачи линейной алгебры с разреженными матрицами возникают во многих областях, например, при решении дифференциальных уравнений в частных производных, при решении многомерных задач локальной оптимизации
 \newpage
 
 % Постановка задачи
@@ -180,7 +175,7 @@ MultMatrix multMatrixParallel(const MultMatrix& mtx);
 \item Операционная система: Windows 10 Home.
 \end{itemize}
 
-\par Эксперименты проводились на 6 потоках. Размеры матриц 200*300 и 300*400.
+\par Эксперименты проводились на 6 потоках. Размеры матриц 200 на 300 и 300 на 400.
 
 \par Результаты экспериментов.
 \begin{table}[!h]
@@ -190,10 +185,10 @@ MultMatrix multMatrixParallel(const MultMatrix& mtx);
 \hline
 Версия алгоритма & Время работы (в секундах) & Ускорение  \\[5pt]
 \hline
-Sequential        & 1.57611        & -         \\
-OpenMP        & 0.369671        & 1.60312          \\
-TBB       & 0.262426        & 1.98169         \\
-std::thread        & 0.43303        & 1.54777           \\
+Sequential        & 1.57611        & -           \\
+OpenMP            & 0.369671       & 1.60312      \\
+TBB               & 0.262426       & 1.98169       \\
+std::thread       & 0.43303        & 1.54777        \\
 
 \hline
 \end{tabular}
@@ -269,8 +264,7 @@ mult_matrix.cpp
 
 #include "../../../modules/task_1/gordeev_v_mult_complex_matrix/mult_complex_matrix.h"
 
-std::vector<std::vector<std::complex<int>>>
-        MultMatrix::getRandomMatrix(int _i, int _j) {
+std::vector<std::vector<std::complex<int>>>MultMatrix::getRandomMatrix(int _i, int _j) {
     std::random_device dev;
     std::mt19937 gen(dev());
     std::vector<std::vector<std::complex<int>>> result;
@@ -290,8 +284,7 @@ std::vector<std::vector<std::complex<int>>>
     return result;
 }
 
-std::vector<std::vector<std::complex<int>>>
-        MultMatrix::getEmptyMatrix(int _i, int _j) {
+std::vector<std::vector<std::complex<int>>>MultMatrix::getEmptyMatrix(int _i, int _j) {
     std::vector<std::vector<std::complex<int>>> mtx;
     for (int k = 0; k < _i; k++) {
         mtx.push_back(std::vector<std::complex<int>>(_j));
